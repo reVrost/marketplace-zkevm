@@ -60,6 +60,7 @@ export default function NFTPage() {
         const lres = await orderbookSDK.listListings({
           status: orderbook.OrderStatusName.ACTIVE,
           sellItemContractAddress: String(address),
+          sortDirection: "asc",
         });
         console.log(nres);
         console.log(cres);
@@ -112,6 +113,7 @@ export default function NFTPage() {
   );
 
   const { name, description, image, updated_at } = collection;
+  const floorPrice = listings[0].buy[0].amount;
 
   return (
     <Container size="md">
@@ -122,6 +124,7 @@ export default function NFTPage() {
           description={description}
           avatar={image}
           created={`Created at ${new Date(updated_at).toLocaleString()}`}
+          floorPrice={floorPrice}
         />
         <Grid>
           <Grid.Col xs={12}>

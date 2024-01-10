@@ -20,6 +20,7 @@ interface CollectionInfoProps {
   title: string;
   created: string;
   description: string;
+  floorPrice: string;
 }
 
 export function CollectionInfo({
@@ -28,6 +29,7 @@ export function CollectionInfo({
   title,
   created,
   description,
+  floorPrice,
 }: CollectionInfoProps) {
   const { classes } = useStyles();
   return (
@@ -55,6 +57,11 @@ export function CollectionInfo({
             <Text fz="xs" c="dimmed">
               {created}
             </Text>
+          </Group>
+          <Group noWrap spacing={10} mt={5}>
+          <Text fz="lg" fw={500} className={classes.name}>
+            Floor Price: {floorPrice}
+          </Text>
           </Group>
         </div>
       </Group>
