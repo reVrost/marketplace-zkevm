@@ -25,7 +25,7 @@ interface CollectionData {
 	nfts: any;
 	collection: any;
 	listings: orderbook.Order[];
-  floor: string;
+	floor: string;
 }
 
 export default function NFTPage() {
@@ -36,7 +36,7 @@ export default function NFTPage() {
 		nfts: [],
 		collection: undefined,
 		listings: [],
-    floor: "0",
+		floor: "0",
 	});
 
 	const [filterValue, setFilterValue] = useState(""); // State to hold the filter value
@@ -81,11 +81,16 @@ export default function NFTPage() {
 				//   );
 				// }
 
+				let floor = "0";
+				if (filteredListings.length) {
+					floor = filteredListings[0].buy[0].amount;
+				}
+
 				setData({
 					listings: filteredListings,
 					collection: cres.result,
 					nfts: nres.result,
-          floor: lres.result[0].buy[0].amount,
+					floor: floor,
 				});
 			} catch (error) {
 				console.error("Error fetching collections:", error);
@@ -123,32 +128,32 @@ export default function NFTPage() {
 		setFilterValue(event.target.value);
 	};
 
-  const handleResetClick = async () => {
-    // Reset the listings to the original state
-    const lres = await orderbookSDK.listListings({
-      status: orderbook.OrderStatusName.ACTIVE,
-      sellItemContractAddress: String(address),
-      sortDirection: "asc",
-    });
+	const handleResetClick = async () => {
+		// Reset the listings to the original state
+		const lres = await orderbookSDK.listListings({
+			status: orderbook.OrderStatusName.ACTIVE,
+			sellItemContractAddress: String(address),
+			sortDirection: "asc",
+		});
 
-    setData({
-      ...data,
-      listings: lres.result // Assuming 'listingsFull' holds the original unfiltered listings
-    });
-    setFilterValue(""); // Reset the filter input value
-  };
+		setData({
+			...data,
+			listings: lres.result, // Assuming 'listingsFull' holds the original unfiltered listings
+		});
+		setFilterValue(""); // Reset the filter input value
+	};
 
 	const handleFilterClick = () => {
-    // Convert filterValue to a number (assuming it's a price ceiling)
+		// Convert filterValue to a number (assuming it's a price ceiling)
 		const priceCeiling = parseFloat(filterValue);
 
-    // Filter listings with details where the sell price is less than the entered price
-    const filteredListings = listingsWithDetails.filter((listing: any) => {
-    const listingPrice = parseFloat(listing.price); // Assuming 'price' is the property to filter
+		// Filter listings with details where the sell price is less than the entered price
+		const filteredListings = listingsWithDetails.filter((listing: any) => {
+			const listingPrice = parseFloat(listing.price); // Assuming 'price' is the property to filter
 
 			// Filter condition: Show items with a sell price less than or equal to the entered price
 			return !isNaN(priceCeiling) && listingPrice <= priceCeiling;
-    });
+		});
 
 		setData({
 			...data,
@@ -176,7 +181,7 @@ export default function NFTPage() {
 							style={{ marginRight: "10px" }}
 						/>
 						<Button onClick={handleFilterClick}>Filter</Button>
-            <Button onClick={handleResetClick}>Reset</Button>
+						<Button onClick={handleResetClick}>Reset</Button>
 					</div>
 
 					<Grid.Col xs={12}>

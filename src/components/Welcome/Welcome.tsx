@@ -45,17 +45,16 @@ export function Welcome() {
 
     // Fetch data only if contractAddressInput has a value
     if (contractAddressInput) {
-      fetchData();
+      fetchData(contractAddressInput);
     }
   }, [contractAddressInput]); // Add contractAddressInput to the dependency array
 
-  const fetchData = async () => {
+  const fetchData = async (contractAddress: string) => {
     try {
-      const response = await orderbookSDK.listListings({
-        sellItemContractAddress: "0xee4d2e6d5fb8f3c19eed6a7541bace1682c438ec",
-        pageSize: 200,
+      const response = await blockChainSDK.listCollections({
+        chainName: CHAIN_NAME,
+        contractAddress: [contractAddress],
       });
-      console.log("response", response);
       setCollections(response.result);
     } catch (error) {
       console.error("Error fetching collections:", error);
@@ -69,7 +68,7 @@ export function Welcome() {
   const handleSearch = () => {
     // Fetch data only if contractAddressInput has a value
     if (contractAddressInput) {
-      fetchData();
+      fetchData(contractAddressInput);
     }
   };
 
@@ -100,12 +99,12 @@ export function Welcome() {
           <SimpleGrid cols={3}>
             {collections.map((c: any, index: number) => (
               <CollectionButton
-                key={`col-${index}`}
-                contractAddress={c.sell[0].contractAddress}
-                image={c.type}
-                description={c.type}
-                name={c.type}
-                updatedAt={c.type}
+              key={`col-${index}`}
+              contractAddress={c.contract_address}
+              image={c.image}
+              description={c.description}
+              name={c.name}
+              updatedAt={c.updated_at}
               />
             ))}
           </SimpleGrid>
