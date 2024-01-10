@@ -1,4 +1,4 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Button,
@@ -12,13 +12,11 @@ import {
 
 import { IconWallet } from "@tabler/icons-react";
 import { Web3Context } from "@/contexts/Web3ProviderContext";
-
-import { hideAllWidgets, WidgetContext } from "@/hooks/orchestration";
-import { useConnectWidget } from "@/hooks/useConnectWidget";
-import { useWalletWidget } from "@/hooks/useWalletWidget";
-
-import { ImmutableWidget } from "@/components/ImmutableWidget/ImmutableWidget";
+import { PassportInstance, WidgetContext } from "@/hooks/orchestration";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle/ColorSchemeToggle";
+import { checkout, config, passport } from "@imtbl/sdk";
+
+const passportProvider = PassportInstance.connectEvm();
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -88,26 +86,39 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
 
   // Widget context state for showing/hiding widgets
   const { web3Provider, setWeb3Provider } = useContext(Web3Context);
-  const {
-    showWidgets: { showConnect, showWallet, showSwap, showBridge },
-    setShowWidgets,
-  } = useContext(WidgetContext);
+  const { connectWidget, walletWidget, setProvider } =
+    useContext(WidgetContext);
 
-  // Hooks for each widget to propagate web3 provider from event.
-  useConnectWidget(setWeb3Provider);
-  useWalletWidget(setWeb3Provider);
+  useEffect(() => {
+    if (!connectWidget) return;
+    connectWidget.addListener(checkout.ConnectEventType.SUCCESS, (data) => {
+      // setGoToBalances(true);
+      console.log("SUCCESS CONNECT", data.provider);
+      setWeb3Provider(data.provider);
+      setProvider(data.provider);
+    });
+    connectWidget.addListener(checkout.ConnectEventType.CLOSE_WIDGET, () => {
+      connectWidget.unmount();
+    });
+
+    if (!walletWidget) return;
+    walletWidget.addListener(checkout.WalletEventType.CLOSE_WIDGET, () => {
+      walletWidget.unmount();
+    });
+    return () => {
+      connectWidget?.unmount();
+      walletWidget?.unmount();
+    };
+  }, [connectWidget, walletWidget, setProvider]);
 
   // Controls the opening and closing of the widget window
   const openConnectWidget = useCallback(() => {
-    setShowWidgets({
-      ...hideAllWidgets,
-      showConnect: { show: true, data: {} },
-    });
-  }, [setShowWidgets]);
+    connectWidget?.mount("connect-widget");
+  }, []);
 
   const openWalletWidget = useCallback(() => {
-    setShowWidgets({ ...hideAllWidgets, showWallet: { show: true, data: {} } });
-  }, [setShowWidgets]);
+    walletWidget?.mount("wallet-widget");
+  }, []);
 
   const items = links.map((link) => (
     <Link
@@ -123,6 +134,21 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
       {link.label}
     </Link>
   ));
+
+  const passportLogin = async () => {
+    try {
+      console.log("START");
+      const requestAcc = await passportProvider.request({
+        method: "eth_requestAccounts",
+      });
+      console.log("requestAcc", requestAcc);
+      const userinfo = await PassportInstance.getUserInfo();
+      console.log(userinfo);
+    } catch (err) {
+      console.warn(err);
+    }
+    console.log("DONE");
+  };
 
   return (
     <Header height={56} className={classes.header} mb={120}>
@@ -145,17 +171,26 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
           >
             {web3Provider === undefined ? "Connect" : "My Wallet"}
           </Button>
-          {web3Provider ? <Button onClick={() => setWeb3Provider(undefined)} variant="light">Disconnect</Button> : <></>}
+          <Button onClick={passportLogin}>Passport</Button>
+          {web3Provider ? (
+            <Button
+              onClick={() => {
+                console.log("Disconnected");
+                setWeb3Provider(undefined);
+                setProvider(undefined);
+              }}
+              variant="light"
+            >
+              Disconnect
+            </Button>
+          ) : (
+            <></>
+          )}
         </Group>
       </Container>
       <Group position="right">
-        <ImmutableWidget
-          web3Provider={web3Provider}
-          showConnect={showConnect}
-          showWallet={showWallet}
-          showSwap={showSwap}
-          showBridge={showBridge}
-        />
+        <div id="connect-widget"></div>
+        <div id="wallet-widget"></div>
       </Group>
     </Header>
   );

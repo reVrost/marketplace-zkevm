@@ -1,81 +1,161 @@
-import { checkoutSdk } from '@imtbl/sdk';
-import React, {
+import {
   createContext,
   Dispatch,
   SetStateAction,
+  useEffect,
+  useMemo,
   useState,
 } from "react";
+import { Web3Provider } from "@ethersproject/providers";
+import { checkout, config, passport } from "@imtbl/sdk";
 
-export interface ShowWidget {
-  show: boolean;
-  data: any;
-}
+/** Create the passport instance once for the application */
+export const PassportInstance = new passport.Passport({
+  baseConfig: new config.ImmutableConfiguration({
+    environment: config.Environment.SANDBOX,
+    // publishableKey: "pk_imapik-test-xw7CFx0M-_EEOjFbShLx",
+  }),
+  // non production client id
+  clientId: "4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb",
+  // default next dev hosting
+  redirectUri: "http://localhost:3000",
+  logoutRedirectUri: "http://localhost:3000",
+  audience: "platform_api",
+  scope: "openid offline_access email transact",
+});
 
-export interface WidgetState {
-  showConnect: ShowWidget;
-  showWallet: ShowWidget;
-  showSwap: ShowWidget;
-  showBridge: ShowWidget;
-}
+/** Create the checkout instance once for the application and inject passport */
+const checkoutInstance = new checkout.Checkout({
+  baseConfig: new config.ImmutableConfiguration({
+    environment: config.Environment.SANDBOX,
+  }),
+  passport: PassportInstance,
+});
 
-export const hideAllWidgets: WidgetState = {
-  showConnect: { show: false, data: {} },
-  showWallet: { show: false, data: {} },
-  showSwap: { show: false, data: {} },
-  showBridge: { show: false, data: {} },
+type WidgetParams = {
+  connect: checkout.ConnectWidgetParams | null;
+  wallet: checkout.WalletWidgetParams | null;
+  swap: checkout.SwapWidgetParams | null;
+  bridge: checkout.BridgeWidgetParams | null;
+  onramp: checkout.OnRampWidgetParams | null;
+  sale: checkout.SaleWidgetParams | null;
 };
 
-export function handleOrchestrationEvent(
-  event: CustomEvent,
-  setShowWidgets: Dispatch<SetStateAction<WidgetState>>
-) {
-  switch (event.detail.type) {
-    case checkoutSdk.OrchestrationEventType.REQUEST_CONNECT: {
-      setShowWidgets({
-        ...hideAllWidgets,
-        showConnect: { show: true, data: event.detail.data },
-      });
-      return;
-    }
-    case checkoutSdk.OrchestrationEventType.REQUEST_WALLET: {
-      setShowWidgets({
-        ...hideAllWidgets,
-        showWallet: { show: true, data: event.detail.data },
-      });
-      return;
-    }
-    default: {
-      console.log("orchestration event not handled");
-      return;
-    }
-  }
-}
-
 export interface WidgetContextState {
-  showWidgets: WidgetState;
-  setShowWidgets: Dispatch<SetStateAction<WidgetState>>;
+  connectWidget:
+    | checkout.Widget<typeof checkout.WidgetType.CONNECT>
+    | undefined;
+  walletWidget: checkout.Widget<typeof checkout.WidgetType.WALLET> | undefined;
+  bridgeWidget: checkout.Widget<typeof checkout.WidgetType.BRIDGE> | undefined;
+  swapWidget: checkout.Widget<typeof checkout.WidgetType.SWAP> | undefined;
+  onRampWidget: checkout.Widget<typeof checkout.WidgetType.ONRAMP> | undefined;
+  saleWidget: checkout.Widget<typeof checkout.WidgetType.SALE> | undefined;
+  checkout: checkout.Checkout | undefined;
+  provider: Web3Provider | undefined;
+  setProvider: Dispatch<SetStateAction<Web3Provider | undefined>>;
+  passport: passport.Passport | undefined;
+  factory: ImmutableCheckoutWidgets.WidgetsFactory | undefined;
+  widgetData: WidgetParams;
+  setWidgetData: Dispatch<SetStateAction<WidgetParams>>;
 }
 
 export const initialWidgetContextState: WidgetContextState = {
-  showWidgets: hideAllWidgets,
-  setShowWidgets: () => {},
+  connectWidget: undefined,
+  walletWidget: undefined,
+  bridgeWidget: undefined,
+  swapWidget: undefined,
+  onRampWidget: undefined,
+  saleWidget: undefined,
+  provider: undefined,
+  checkout: undefined,
+  setProvider: () => {},
+  passport: undefined,
+  factory: undefined,
+  widgetData: {
+    connect: null,
+    wallet: null,
+    swap: null,
+    bridge: null,
+    onramp: null,
+    sale: null,
+  },
+  setWidgetData: () => {},
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const WidgetContext = createContext<WidgetContextState>(
-  initialWidgetContextState
+  initialWidgetContextState,
 );
+WidgetContext.displayName = "Widget Context";
 
-export interface WidgetProviderProps {
+export interface WidgetProvider {
   children: React.ReactNode;
 }
 
-export const WidgetProvider = (provider: WidgetProviderProps) => {
-  const [showWidgets, setShowWidgets] = useState(hideAllWidgets);
-  const child = provider.children;
+export const WidgetProvider = ({ children }: WidgetProvider) => {
+  const [provider, setProvider] = useState<Web3Provider | undefined>();
+  const [factory, setFactory] =
+    useState<ImmutableCheckoutWidgets.WidgetsFactory>();
+  const [widgetData, setWidgetData] = useState<WidgetParams>(
+    initialWidgetContextState.widgetData,
+  );
+
+  const connectWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.CONNECT),
+    [factory],
+  );
+  const walletWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.WALLET),
+    [factory],
+  );
+  const bridgeWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.BRIDGE),
+    [factory],
+  );
+  const swapWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.SWAP),
+    [factory],
+  );
+  const onRampWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.ONRAMP),
+    [factory],
+  );
+  const saleWidget = useMemo(
+    () => factory?.create(checkout.WidgetType.SALE),
+    [factory],
+  );
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const widgetsFactory = await checkoutInstance.widgets({
+          config: { theme: checkout.WidgetTheme.DARK },
+        });
+        setFactory(widgetsFactory);
+      } catch (err: any) {
+        console.error(err);
+      }
+    })();
+  }, []);
+
   return (
-    <WidgetContext.Provider value={{ showWidgets, setShowWidgets }}>
-      {child}
+    <WidgetContext.Provider
+      value={{
+        connectWidget,
+        walletWidget,
+        bridgeWidget,
+        swapWidget,
+        onRampWidget,
+        saleWidget,
+        provider,
+        setProvider,
+        checkout: checkoutInstance,
+        passport: PassportInstance,
+        factory,
+        widgetData,
+        setWidgetData,
+      }}
+    >
+      {children}
     </WidgetContext.Provider>
   );
 };

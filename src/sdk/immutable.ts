@@ -15,7 +15,7 @@ export const orderbookSDK = new orderbook.Orderbook({
   overrides: {
     provider: new providers.JsonRpcProvider(
       // If white-listed; replace with the public rpc endpoint
-      "https://rpc.testnet.immutable.com"
+      "https://rpc.testnet.immutable.com",
     ),
   },
 });
@@ -23,12 +23,13 @@ export const orderbookSDK = new orderbook.Orderbook({
 export const passportSDK = new passport.Passport({
   baseConfig: new config.ImmutableConfiguration({
     environment: config.Environment.SANDBOX,
+    publishableKey: "pk_imapik-test-xw7CFx0M-_EEOjFbShLx",
   }),
   // non production client id
-  clientId: '4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb',
+  clientId: "4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb",
   // default next dev hosting
-  redirectUri: 'http://localhost:3000',
-  logoutRedirectUri: 'http://localhost:3000',
-  audience: 'platform_api',
-  scope: 'openid offline_access email transact'
+  redirectUri: "http://localhost:3000",
+  logoutRedirectUri: "http://localhost:3000",
+  audience: "platform_api",
+  scope: "openid offline_access email transact",
 });
