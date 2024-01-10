@@ -16,6 +16,7 @@ import { PassportInstance, WidgetContext } from "@/hooks/orchestration";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle/ColorSchemeToggle";
 import { checkout, config, passport } from "@imtbl/sdk";
 import { passportSDK } from "@/sdk/immutable";
+import { useLocalStorage } from "@mantine/hooks";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -82,6 +83,10 @@ interface HeaderSearchProps {
 export function HeaderSearch({ links }: HeaderSearchProps) {
   const { classes, cx } = useStyles();
   const [active, setActive] = useState(links[0].link);
+  const [passport, setPassport] = useLocalStorage<string>({
+    key: "passport",
+    defaultValue: "",
+  });
 
   // Widget context state for showing/hiding widgets
   const { web3Provider, setWeb3Provider, userAddress, setUserAddress } =
@@ -109,6 +114,7 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
           }
           console.log("con", connectedWallet);
           setUserAddress(connectedWallet);
+          setPassport(connectedWallet);
           setWeb3Provider(passportProvider as any);
           setProvider(passportProvider as any);
         } else {
@@ -180,6 +186,8 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
             <Button
               onClick={() => {
                 console.log("Disconnected");
+                setPassport("");
+                setUserAddress("");
                 setWeb3Provider(undefined);
                 setProvider(undefined);
               }}

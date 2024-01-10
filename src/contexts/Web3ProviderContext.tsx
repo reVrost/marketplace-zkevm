@@ -6,6 +6,8 @@ import {
 } from "@ethersproject/providers";
 import { providers } from "ethers";
 import { passportSDK } from "@/sdk/immutable";
+import { useLocalStorage } from "@mantine/hooks";
+import { passport } from "@imtbl/sdk";
 
 interface Ethereum extends ExternalProvider, JsonRpcFetchFunc {
   on: (
@@ -41,29 +43,38 @@ export function Web3ProviderContextProvider({ children }: any) {
     undefined,
   );
   const [userAddress, setUserAddress] = useState<string | undefined>(undefined);
+  const [passport] = useLocalStorage<string>({
+    key: "passport",
+    defaultValue: "",
+  });
+
+  // Load web3provider if passport was logged in from local storage
+  useEffect(() => {
+    console.log(passport);
+    if (passport) {
+      const provider = new providers.Web3Provider(passportSDK.connectEvm());
+      const tryGetPassportProvider = async () => {
+        try {
+          const [connectedWallet]: (string | undefined)[] = await provider.send(
+            "eth_requestAccounts",
+            [],
+          );
+          if (!connectedWallet) {
+            return;
+          }
+          setWeb3Provider(provider);
+          setUserAddress(connectedWallet);
+        } catch (e) {
+          console.log(e);
+          // do nothing
+        }
+      };
+      tryGetPassportProvider();
+    }
+  }, [passport]);
 
   // Load web3Provider from an already connected window.etherum
   useEffect(() => {
-    // const provider = new providers.Web3Provider(passportSDK.connectEvm());
-    // if (provider) {
-    //   const tryGetPassportProvider = async () => {
-    //     try {
-    //       const [connectedWallet]: (string | undefined)[] = await provider.send(
-    //         "eth_requestAccounts",
-    //         [],
-    //       );
-    //       if (!connectedWallet) {
-    //         return;
-    //       }
-    //       setWeb3Provider(provider);
-    //       setUserAddress(connectedWallet);
-    //     } catch (e) {
-    //       console.log(e);
-    //       // do nothing
-    //     }
-    //   };
-    //   tryGetPassportProvider();
-    // }
     if (window.ethereum) {
       const provider = new providers.Web3Provider(window.ethereum);
       const fetchProvider = async () => {
