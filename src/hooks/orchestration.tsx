@@ -8,28 +8,14 @@ import {
 } from "react";
 import { Web3Provider } from "@ethersproject/providers";
 import { checkout, config, passport } from "@imtbl/sdk";
-
-/** Create the passport instance once for the application */
-export const PassportInstance = new passport.Passport({
-  baseConfig: new config.ImmutableConfiguration({
-    environment: config.Environment.SANDBOX,
-    // publishableKey: "pk_imapik-test-xw7CFx0M-_EEOjFbShLx",
-  }),
-  // non production client id
-  clientId: "4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb",
-  // default next dev hosting
-  redirectUri: "http://localhost:3000",
-  logoutRedirectUri: "http://localhost:3000",
-  audience: "platform_api",
-  scope: "openid offline_access email transact",
-});
+import { passportSDK } from "@/sdk/immutable";
 
 /** Create the checkout instance once for the application and inject passport */
 const checkoutInstance = new checkout.Checkout({
   baseConfig: new config.ImmutableConfiguration({
     environment: config.Environment.SANDBOX,
   }),
-  passport: PassportInstance,
+  passport: passportSDK,
 });
 
 type WidgetParams = {
@@ -149,7 +135,7 @@ export const WidgetProvider = ({ children }: WidgetProvider) => {
         provider,
         setProvider,
         checkout: checkoutInstance,
-        passport: PassportInstance,
+        passport: passportSDK,
         factory,
         widgetData,
         setWidgetData,

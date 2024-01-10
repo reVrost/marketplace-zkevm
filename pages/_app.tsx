@@ -15,11 +15,12 @@ import { Web3ProviderContextProvider } from "@/contexts/Web3ProviderContext";
 import { WidgetProvider } from "@/hooks/orchestration";
 import { HeaderSearch } from "@/components/HeaderSearch/HeaderSearch";
 import { CartContext, Orders } from "@/contexts/CartContext";
+import { passportSDK } from "@/sdk/immutable";
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
   const [colorScheme, setColorScheme] = useState<ColorScheme>(
-    props.colorScheme
+    props.colorScheme,
   );
   const [orders, setOrders] = useState<Orders>([]);
 

@@ -15,8 +15,7 @@ import { Web3Context } from "@/contexts/Web3ProviderContext";
 import { PassportInstance, WidgetContext } from "@/hooks/orchestration";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle/ColorSchemeToggle";
 import { checkout, config, passport } from "@imtbl/sdk";
-
-const passportProvider = PassportInstance.connectEvm();
+import { passportSDK } from "@/sdk/immutable";
 
 const useStyles = createStyles((theme) => ({
   header: {
@@ -85,18 +84,39 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
   const [active, setActive] = useState(links[0].link);
 
   // Widget context state for showing/hiding widgets
-  const { web3Provider, setWeb3Provider } = useContext(Web3Context);
+  const { web3Provider, setWeb3Provider, userAddress, setUserAddress } =
+    useContext(Web3Context);
   const { connectWidget, walletWidget, setProvider } =
     useContext(WidgetContext);
 
   useEffect(() => {
     if (!connectWidget) return;
-    connectWidget.addListener(checkout.ConnectEventType.SUCCESS, (data) => {
-      // setGoToBalances(true);
-      console.log("SUCCESS CONNECT", data.provider);
-      setWeb3Provider(data.provider);
-      setProvider(data.provider);
-    });
+    connectWidget.addListener(
+      checkout.ConnectEventType.SUCCESS,
+      async (data) => {
+        // setGoToBalances(true);
+        console.log("SUCCESS CONNECT", data.provider);
+        const user = await passportSDK.getUserInfo();
+        const passportProvider = passportSDK.connectEvm();
+        console.log(passportProvider);
+        if (user && passportProvider) {
+          const connectedWallet = (await passportProvider.send(
+            "eth_requestAccounts",
+            [],
+          )) as any;
+          if (!connectedWallet) {
+            return;
+          }
+          console.log("con", connectedWallet);
+          setUserAddress(connectedWallet);
+          setWeb3Provider(passportProvider as any);
+          setProvider(passportProvider as any);
+        } else {
+          setWeb3Provider(data.provider);
+          setProvider(data.provider);
+        }
+      },
+    );
     connectWidget.addListener(checkout.ConnectEventType.CLOSE_WIDGET, () => {
       connectWidget.unmount();
     });
@@ -112,13 +132,13 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
   }, [connectWidget, walletWidget, setProvider]);
 
   // Controls the opening and closing of the widget window
-  const openConnectWidget = useCallback(() => {
+  const openConnectWidget = () => {
     connectWidget?.mount("connect-widget");
-  }, []);
+  };
 
-  const openWalletWidget = useCallback(() => {
-    walletWidget?.mount("wallet-widget");
-  }, []);
+  const openWalletWidget = () => {
+    walletWidget?.mount("connect-widget");
+  };
 
   const items = links.map((link) => (
     <Link
@@ -134,21 +154,6 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
       {link.label}
     </Link>
   ));
-
-  const passportLogin = async () => {
-    try {
-      console.log("START");
-      const requestAcc = await passportProvider.request({
-        method: "eth_requestAccounts",
-      });
-      console.log("requestAcc", requestAcc);
-      const userinfo = await PassportInstance.getUserInfo();
-      console.log(userinfo);
-    } catch (err) {
-      console.warn(err);
-    }
-    console.log("DONE");
-  };
 
   return (
     <Header height={56} className={classes.header} mb={120}>
@@ -169,9 +174,8 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
             onClick={web3Provider ? openWalletWidget : openConnectWidget}
             variant="light"
           >
-            {web3Provider === undefined ? "Connect" : "My Wallet"}
+            {web3Provider === undefined ? "Connect" : userAddress}
           </Button>
-          <Button onClick={passportLogin}>Passport</Button>
           {web3Provider ? (
             <Button
               onClick={() => {
@@ -190,7 +194,6 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
       </Container>
       <Group position="right">
         <div id="connect-widget"></div>
-        <div id="wallet-widget"></div>
       </Group>
     </Header>
   );

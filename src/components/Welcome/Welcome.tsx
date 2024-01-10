@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Container, createStyles, SimpleGrid, Skeleton, TextInput, Button } from "@mantine/core";
+import {
+  Button,
+  Container,
+  createStyles,
+  SimpleGrid,
+  Skeleton,
+  TextInput,
+} from "@mantine/core";
 import { Text, Title } from "@mantine/core";
 
-import { blockChainSDK, CHAIN_NAME, orderbookSDK } from "@/sdk/immutable";
+import {
+  blockChainSDK,
+  CHAIN_NAME,
+  orderbookSDK,
+  passportSDK,
+} from "@/sdk/immutable";
 import { CollectionButton } from "../CollectionButton/CollectionButton";
 
 const style = createStyles((theme: any) => ({
@@ -24,6 +36,13 @@ export function Welcome() {
   const [contractAddressInput, setContractAddressInput] = useState("");
 
   useEffect(() => {
+    if (
+      typeof window !== undefined &&
+      window.location.search.includes("?code=")
+    ) {
+      passportSDK.loginCallback();
+    }
+
     // Fetch data only if contractAddressInput has a value
     if (contractAddressInput) {
       fetchData();
@@ -36,7 +55,7 @@ export function Welcome() {
         sellItemContractAddress: "0xee4d2e6d5fb8f3c19eed6a7541bace1682c438ec",
         pageSize: 200,
       });
-      console.log("response", response)
+      console.log("response", response);
       setCollections(response.result);
     } catch (error) {
       console.error("Error fetching collections:", error);
@@ -62,7 +81,13 @@ export function Welcome() {
         </Text>
       </Title>
       <Container size="lg">
-        <div style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
           <TextInput
             value={contractAddressInput}
             onChange={handleInputChange}

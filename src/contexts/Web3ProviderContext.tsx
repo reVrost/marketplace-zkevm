@@ -26,12 +26,14 @@ interface Web3ContextProps {
   setWeb3Provider: React.Dispatch<
     React.SetStateAction<Web3Provider | undefined>
   >;
+  setUserAddress: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 export const Web3Context = createContext<Web3ContextProps>({
   web3Provider: undefined,
   userAddress: undefined,
   setWeb3Provider: () => {},
+  setUserAddress: () => {},
 });
 
 export function Web3ProviderContextProvider({ children }: any) {
@@ -42,27 +44,27 @@ export function Web3ProviderContextProvider({ children }: any) {
 
   // Load web3Provider from an already connected window.etherum
   useEffect(() => {
-    const provider = new providers.Web3Provider(passportSDK.connectEvm());
-    if (provider) {
-      const tryGetPassportProvider = async () => {
-        try {
-          const [connectedWallet]: (string | undefined)[] = await provider.send(
-            "eth_requestAccounts",
-            [],
-          );
-          if (!connectedWallet) {
-            return;
-          }
-          setWeb3Provider(provider);
-          setUserAddress(connectedWallet);
-        } catch (e) {
-          console.log(e);
-          // do nothing
-        }
-      };
-      tryGetPassportProvider();
-    }
-    if (window.ethereum && !provider) {
+    // const provider = new providers.Web3Provider(passportSDK.connectEvm());
+    // if (provider) {
+    //   const tryGetPassportProvider = async () => {
+    //     try {
+    //       const [connectedWallet]: (string | undefined)[] = await provider.send(
+    //         "eth_requestAccounts",
+    //         [],
+    //       );
+    //       if (!connectedWallet) {
+    //         return;
+    //       }
+    //       setWeb3Provider(provider);
+    //       setUserAddress(connectedWallet);
+    //     } catch (e) {
+    //       console.log(e);
+    //       // do nothing
+    //     }
+    //   };
+    //   tryGetPassportProvider();
+    // }
+    if (window.ethereum) {
       const provider = new providers.Web3Provider(window.ethereum);
       const fetchProvider = async () => {
         if (provider) {
@@ -94,7 +96,7 @@ export function Web3ProviderContextProvider({ children }: any) {
 
   return (
     <Web3Context.Provider
-      value={{ web3Provider, setWeb3Provider, userAddress }}
+      value={{ web3Provider, setWeb3Provider, userAddress, setUserAddress }}
     >
       {children}
     </Web3Context.Provider>

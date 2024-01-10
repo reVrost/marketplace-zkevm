@@ -23,7 +23,6 @@ export const orderbookSDK = new orderbook.Orderbook({
 export const passportSDK = new passport.Passport({
   baseConfig: new config.ImmutableConfiguration({
     environment: config.Environment.SANDBOX,
-    publishableKey: "pk_imapik-test-xw7CFx0M-_EEOjFbShLx",
   }),
   // non production client id
   clientId: "4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb",
