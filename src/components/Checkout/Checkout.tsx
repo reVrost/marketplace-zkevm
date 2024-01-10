@@ -1,9 +1,9 @@
 import React, { useContext, useState } from "react";
-import { Group, Text, Divider, Flex, Button } from "@mantine/core";
+import { Button, Divider, Flex, Group, Text } from "@mantine/core";
 import { orderbook } from "@imtbl/sdk";
 import { MARKETPLACE_FEE_RECIPIENT, USD, WEI } from "@/sdk/orderbook";
 import { Web3Context } from "@/contexts/Web3ProviderContext";
-import { orderbookSDK  } from "@/sdk/immutable";
+import { orderbookSDK } from "@/sdk/immutable";
 import { actionAll } from "@/sdk/orderbook";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconExclamationCircle } from "@tabler/icons-react";
@@ -27,7 +27,7 @@ export function Checkout({ orders }: CheckoutProps) {
           .map(
             (o) =>
               Number(o.buy[0].amount) +
-              o.fees.map((f) => Number(f.amount) ?? 0).reduce((p, c) => p + c)
+              o.fees.map((f) => Number(f.amount) ?? 0).reduce((p, c) => p + c),
           )
           .reduce((p, c) => p + c) / WEI
       : 0;
@@ -46,17 +46,20 @@ export function Checkout({ orders }: CheckoutProps) {
       const address = await signer.getAddress();
 
       console.log("Buying", orders, address, signer);
-      const fulfillResponse = await orderbookSDK.fulfillBulkOrders(orders.map(o => {
-        return {
-          listingId: o.orderId,
-          takerFees: [
-            {
-              recipient: MARKETPLACE_FEE_RECIPIENT,
-              amount: ((3 / 100) * Number(o.buy[0].amount)).toString(),
-            },
-          ]
-        }
-      }), address);
+      const fulfillResponse = await orderbookSDK.fulfillBulkOrders(
+        orders.map((o) => {
+          return {
+            listingId: o.orderId,
+            takerFees: [
+              {
+                recipientAddress: MARKETPLACE_FEE_RECIPIENT,
+                amount: ((3 / 100) * Number(o.buy[0].amount)).toString(),
+              },
+            ],
+          };
+        }),
+        address,
+      );
 
       if (!fulfillResponse.sufficientBalance) {
         notifications.show({

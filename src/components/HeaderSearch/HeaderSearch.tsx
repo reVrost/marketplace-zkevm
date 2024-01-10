@@ -12,9 +12,9 @@ import {
 
 import { IconWallet } from "@tabler/icons-react";
 import { Web3Context } from "@/contexts/Web3ProviderContext";
-import { PassportInstance, WidgetContext } from "@/hooks/orchestration";
+import { WidgetContext } from "@/hooks/orchestration";
 import { ColorSchemeToggle } from "@/components/ColorSchemeToggle/ColorSchemeToggle";
-import { checkout, config, passport } from "@imtbl/sdk";
+import { checkout } from "@imtbl/sdk";
 import { passportSDK } from "@/sdk/immutable";
 import { useLocalStorage } from "@mantine/hooks";
 

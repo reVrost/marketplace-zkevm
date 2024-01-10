@@ -14,7 +14,7 @@ export function PriceInfo({ fees, listing }: PriceInfoProps) {
   const taker: orderbook.Fee = {
     type: orderbook.FeeType.TAKER_ECOSYSTEM,
     amount: ((3 / 100) * Number(listing.amount)).toString(),
-    recipient: MARKETPLACE_FEE_RECIPIENT,
+    recipientAddress: MARKETPLACE_FEE_RECIPIENT,
   };
   const total =
     (Number(listing.amount) +

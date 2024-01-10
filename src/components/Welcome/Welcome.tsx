@@ -36,10 +36,7 @@ export function Welcome() {
   const [contractAddressInput, setContractAddressInput] = useState("");
 
   useEffect(() => {
-    if (
-      typeof window !== undefined &&
-      window.location.search.includes("?code=")
-    ) {
+    if (window.location.search.includes("?code=")) {
       passportSDK.loginCallback();
     }
 
@@ -99,12 +96,12 @@ export function Welcome() {
           <SimpleGrid cols={3}>
             {collections.map((c: any, index: number) => (
               <CollectionButton
-              key={`col-${index}`}
-              contractAddress={c.contract_address}
-              image={c.image}
-              description={c.description}
-              name={c.name}
-              updatedAt={c.updated_at}
+                key={`col-${index}`}
+                contractAddress={c.contract_address}
+                image={c.image}
+                description={c.description}
+                name={c.name}
+                updatedAt={c.updated_at}
               />
             ))}
           </SimpleGrid>

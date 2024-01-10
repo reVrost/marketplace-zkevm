@@ -88,7 +88,7 @@ export function NFTCard({
   id,
   fees = [],
 }: NFTCardProps) {
-  const { orders, setOrders } = useContext(CartContext)
+  const { orders, setOrders } = useContext(CartContext);
   const { classes } = useStyles();
   const [listing] = buy || [];
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -112,7 +112,7 @@ export function NFTCard({
       console.log("Buying", id, address, signer);
       const fulfillResponse = await orderbookSDK.fulfillOrder(id!, address, [
         {
-          recipient: MARKETPLACE_FEE_RECIPIENT,
+          recipientAddress: MARKETPLACE_FEE_RECIPIENT,
           amount: ((3 / 100) * Number(listing.amount)).toString(),
         },
       ]);
@@ -141,28 +141,31 @@ export function NFTCard({
   };
 
   const addListingToCart = async () => {
-    console.log(`Adding listing ${id} to cart`)
+    console.log(`Adding listing ${id} to cart`);
 
     if (setOrders) {
-      if (orders.find(o => o.orderId === id)) {
+      if (orders.find((o) => o.orderId === id)) {
         notifications.show({
           title: "Order already in cart!",
           color: "red",
           icon: <IconCheck />,
           message: `Order is already in the shopping cart! 🤥`,
-        }); 
+        });
 
         return;
       }
-      setOrders(o => [...o, {
-        // orderId must be defined if this function can be called
-        orderId: id!,
-        name: name,
-        description: description,
-        image: image,
-        fees: fees,
-        buy: buy!,
-      }])
+      setOrders((o) => [
+        ...o,
+        {
+          // orderId must be defined if this function can be called
+          orderId: id!,
+          name: name,
+          description: description,
+          image: image,
+          fees: fees,
+          buy: buy!,
+        },
+      ]);
 
       notifications.show({
         title: "Order Added to Cart",
@@ -171,7 +174,7 @@ export function NFTCard({
         message: `Your order is added to cart, you are awesome! orderId: ${id} 🤥`,
       });
     }
-  }
+  };
 
   const createListing = async () => {
     if (!web3Provider) return;
@@ -250,26 +253,26 @@ export function NFTCard({
           {listing && <PriceInfo fees={fees} listing={listing} />}
           {buy ? (
             <>
-            <Button
-              radius="xl"
-              disabled={!userAddress}
-              onClick={buyListing}
-              loading={buying}
-              variant="gradient"
-              fullWidth
-            >
-              Buy now
-            </Button>
-            <Button
-              radius="xl"
-              disabled={!userAddress}
-              onClick={addListingToCart}
-              loading={buying}
-              variant="gradient"
-              fullWidth
-            >
-              Add to cart
-            </Button>
+              <Button
+                radius="xl"
+                disabled={!userAddress}
+                onClick={buyListing}
+                loading={buying}
+                variant="gradient"
+                fullWidth
+              >
+                Buy now
+              </Button>
+              <Button
+                radius="xl"
+                disabled={!userAddress}
+                onClick={addListingToCart}
+                loading={buying}
+                variant="gradient"
+                fullWidth
+              >
+                Add to cart
+              </Button>
             </>
           ) : (
             <>
