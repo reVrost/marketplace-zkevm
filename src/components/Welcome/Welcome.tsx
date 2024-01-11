@@ -9,10 +9,12 @@ import {
 } from "@mantine/core";
 import { Text, Title } from "@mantine/core";
 
+import { checkout } from "@imtbl/sdk";
 import {
   blockChainSDK,
   CHAIN_NAME,
   orderbookSDK,
+  checkoutSDK,
   passportSDK,
 } from "@/sdk/immutable";
 import { CollectionButton } from "../CollectionButton/CollectionButton";
@@ -29,6 +31,41 @@ const style = createStyles((theme: any) => ({
     },
   },
 }));
+
+export function Checkout() {
+  const [bridge, setBridge] =
+  useState<checkout.Widget<typeof checkout.WidgetType.BRIDGE>>();
+
+  // Initialise widgets, create bridge widget
+   useEffect(() => {
+     (async () => {
+       const widgets = await checkoutSDK.widgets({
+         config: { theme: checkout.WidgetTheme.DARK },
+       });
+       const bridge = widgets.create(checkout.WidgetType.BRIDGE, { config: { theme: checkout.WidgetTheme.DARK }})
+       setBridge(bridge)
+     })();
+   }, []);
+
+   // mount bridge widget and add event listeners
+   useEffect(() => {
+     if(!bridge) return;
+
+     bridge.mount("bridge");
+
+     bridge.addListener(checkout.BridgeEventType.TRANSACTION_SENT, (data: checkout.BridgeTransactionSent) => {
+       console.log("success", data);
+     });
+     bridge.addListener(checkout.BridgeEventType.FAILURE, (data: checkout.BridgeFailed) => {
+       console.log("failure", data);
+     });
+     bridge.addListener(checkout.BridgeEventType.CLOSE_WIDGET, () => {
+       bridge.unmount();
+     });
+   }, [bridge])
+
+   return (<div id="bridge" />);
+ }
 
 export function Welcome() {
   const { classes } = style();

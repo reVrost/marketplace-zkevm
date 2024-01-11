@@ -1,8 +1,14 @@
-import { blockchainData, config, orderbook, passport } from "@imtbl/sdk";
+import { blockchainData, config, orderbook, passport, checkout } from "@imtbl/sdk";
 import { providers } from "ethers";
 
 export const ENVIRONMENT_SDK = config.Environment.SANDBOX;
 export const CHAIN_NAME: string = "imtbl-zkevm-testnet";
+
+export const checkoutSDK = new checkout.Checkout({
+  baseConfig: new config.ImmutableConfiguration({
+    environment: ENVIRONMENT_SDK,
+  }),
+});
 
 export const blockChainSDK = new blockchainData.BlockchainData({
   baseConfig: new config.ImmutableConfiguration({
