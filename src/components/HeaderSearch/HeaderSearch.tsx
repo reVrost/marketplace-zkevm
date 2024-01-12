@@ -91,7 +91,7 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
   // Widget context state for showing/hiding widgets
   const { web3Provider, setWeb3Provider, userAddress, setUserAddress } =
     useContext(Web3Context);
-  const { connectWidget, walletWidget, setProvider } =
+  const { connectWidget, walletWidget, bridgeWidget, setProvider } =
     useContext(WidgetContext);
 
   useEffect(() => {
@@ -100,10 +100,8 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
       checkout.ConnectEventType.SUCCESS,
       async (data) => {
         // setGoToBalances(true);
-        console.log("SUCCESS CONNECT", data.provider);
         const user = await passportSDK.getUserInfo();
         const passportProvider = passportSDK.connectEvm();
-        console.log(passportProvider);
         if (user && passportProvider) {
           const connectedWallet = (await passportProvider.send(
             "eth_requestAccounts",
@@ -131,17 +129,40 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
     walletWidget.addListener(checkout.WalletEventType.CLOSE_WIDGET, () => {
       walletWidget.unmount();
     });
+
+    if (!bridgeWidget) return;
+    bridgeWidget.mount("bridge");
+
+    bridgeWidget.addListener(
+      checkout.BridgeEventType.TRANSACTION_SENT,
+      (data: checkout.BridgeTransactionSent) => {
+        console.log("success", data);
+      },
+    );
+    bridgeWidget.addListener(
+      checkout.BridgeEventType.FAILURE,
+      (data: checkout.BridgeFailed) => {
+        console.log("failure", data);
+      },
+    );
+    bridgeWidget.addListener(checkout.BridgeEventType.CLOSE_WIDGET, () => {
+      bridgeWidget.unmount();
+    });
+
     return () => {
       connectWidget?.unmount();
       walletWidget?.unmount();
+      bridgeWidget?.unmount();
     };
-  }, [connectWidget, walletWidget, setProvider]);
+  }, [connectWidget, walletWidget, bridgeWidget, setProvider]);
 
   // Controls the opening and closing of the widget window
+  const openBridgeWidget = () => {
+    bridgeWidget?.mount("connect-widget");
+  };
   const openConnectWidget = () => {
     connectWidget?.mount("connect-widget");
   };
-
   const openWalletWidget = () => {
     walletWidget?.mount("connect-widget");
   };
@@ -181,6 +202,14 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
             variant="light"
           >
             {web3Provider === undefined ? "Connect" : userAddress}
+          </Button>
+          <Button
+            leftIcon={<IconWallet size="1rem" />}
+            onClick={openBridgeWidget}
+            disabled={web3Provider == null}
+            variant="light"
+          >
+            Bridge
           </Button>
           {web3Provider ? (
             <Button

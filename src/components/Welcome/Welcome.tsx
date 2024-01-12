@@ -1,23 +1,19 @@
 import React, { useEffect, useState } from "react";
 import {
+  ActionIcon,
   Button,
   Container,
   createStyles,
+  rem,
   SimpleGrid,
-  Skeleton,
+  Stack,
   TextInput,
 } from "@mantine/core";
 import { Text, Title } from "@mantine/core";
 
-import { checkout } from "@imtbl/sdk";
-import {
-  blockChainSDK,
-  CHAIN_NAME,
-  orderbookSDK,
-  checkoutSDK,
-  passportSDK,
-} from "@/sdk/immutable";
+import { blockChainSDK, CHAIN_NAME, passportSDK } from "@/sdk/immutable";
 import { CollectionButton } from "../CollectionButton/CollectionButton";
+import { IconArrowRight, IconSearch } from "@tabler/icons-react";
 
 const style = createStyles((theme: any) => ({
   title: {
@@ -31,41 +27,6 @@ const style = createStyles((theme: any) => ({
     },
   },
 }));
-
-export function Checkout() {
-  const [bridge, setBridge] =
-  useState<checkout.Widget<typeof checkout.WidgetType.BRIDGE>>();
-
-  // Initialise widgets, create bridge widget
-   useEffect(() => {
-     (async () => {
-       const widgets = await checkoutSDK.widgets({
-         config: { theme: checkout.WidgetTheme.DARK },
-       });
-       const bridge = widgets.create(checkout.WidgetType.BRIDGE, { config: { theme: checkout.WidgetTheme.DARK }})
-       setBridge(bridge)
-     })();
-   }, []);
-
-   // mount bridge widget and add event listeners
-   useEffect(() => {
-     if(!bridge) return;
-
-     bridge.mount("bridge");
-
-     bridge.addListener(checkout.BridgeEventType.TRANSACTION_SENT, (data: checkout.BridgeTransactionSent) => {
-       console.log("success", data);
-     });
-     bridge.addListener(checkout.BridgeEventType.FAILURE, (data: checkout.BridgeFailed) => {
-       console.log("failure", data);
-     });
-     bridge.addListener(checkout.BridgeEventType.CLOSE_WIDGET, () => {
-       bridge.unmount();
-     });
-   }, [bridge])
-
-   return (<div id="bridge" />);
- }
 
 export function Welcome() {
   const { classes } = style();
@@ -114,21 +75,29 @@ export function Welcome() {
         </Text>
       </Title>
       <Container size="lg">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
-        >
+        <Container size="md">
           <TextInput
-            value={contractAddressInput}
-            onChange={handleInputChange}
+            radius="xl"
+            size="md"
             placeholder="Enter Contract Address"
-            style={{ marginRight: "10px" }}
+            onChange={handleInputChange}
+            rightSectionWidth={42}
+            rightSection={
+              <ActionIcon
+                size={32}
+                radius="xl"
+                variant="filled"
+                color="primary"
+                onClick={handleSearch}
+              >
+                <IconArrowRight
+                  style={{ width: rem(18), height: rem(18) }}
+                  stroke={1.5}
+                />
+              </ActionIcon>
+            }
           />
-          <Button onClick={handleSearch}>Search</Button>
-        </div>
+        </Container>
         {contractAddressInput && collections.length > 0 ? (
           <SimpleGrid cols={3}>
             {collections.map((c: any, index: number) => (
