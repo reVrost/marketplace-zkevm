@@ -1,4 +1,10 @@
-import { blockchainData, config, orderbook, passport, checkout } from "@imtbl/sdk";
+import {
+  blockchainData,
+  checkout,
+  config,
+  orderbook,
+  passport,
+} from "@imtbl/sdk";
 import { providers } from "ethers";
 
 export const ENVIRONMENT_SDK = config.Environment.SANDBOX;
@@ -33,8 +39,9 @@ export const passportSDK = new passport.Passport({
   // non production client id
   clientId: "4jz9egnVkDgdrYQZZH8yFuvbNY1GyqVb",
   // default next dev hosting
-  redirectUri: "http://localhost:3000",
-  logoutRedirectUri: "http://localhost:3000",
+  redirectUri: "https://james-working--eloquent-muffin-915c1e.netlify.app/",
+  logoutRedirectUri:
+    "https://james-working--eloquent-muffin-915c1e.netlify.app/",
   audience: "platform_api",
   scope: "openid offline_access email transact",
 });
