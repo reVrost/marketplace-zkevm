@@ -156,9 +156,9 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
     };
   }, [connectWidget, walletWidget, bridgeWidget, setProvider]);
 
-  let shortAddress =""
-  if (userAddress) {
-   shortAddress = userAddress.substring(0, 8) + "...";
+  let shortAddress = "";
+  if (userAddress !== "" && userAddress !== undefined) {
+    shortAddress = userAddress!.substring(0, 8) + "...";
   }
 
   // Controls the opening and closing of the widget window
