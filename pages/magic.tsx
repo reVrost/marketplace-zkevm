@@ -91,6 +91,10 @@ export default function Assets() {
 
   const [signed, setSigned] = useState("");
 
+  const getAccessToken = async () => {
+    setAccessToken((await passportSDK.getAccessToken()) || "CANT GET TOKEN");
+  };
+
   return (
     <Container size="xl">
       <Title size="h1" sx={{ marginBottom: "1.5rem" }}>
@@ -103,6 +107,10 @@ export default function Assets() {
           onChange={(e) => setAccessToken(e.currentTarget.value)}
           minRows={5}
         />
+        <SimpleGrid cols={4}>
+          <div /> <div /> <div />{" "}
+          <Button onClick={getAccessToken}>Get new token</Button>
+        </SimpleGrid>
         <SimpleGrid cols={3}>
           <TextInput
             label="User SCW"
@@ -269,6 +277,7 @@ interface MetaTransaction {
 }
 
 import axios from "axios";
+import { passportSDK } from "@/sdk/immutable";
 
 export async function guardianEvaluateTx(
   nonce: Number,
