@@ -116,6 +116,14 @@ export default function Assets() {
             onChange={(e) => setTargetAddress(e.currentTarget.value)}
           />
           <TextInput
+            label="Number of payloads"
+            placeholder="10"
+            value={numberOfPayloads}
+            onChange={(e) =>
+              setNumberOfPayloads(parseInt(e.currentTarget.value, 10) || 1)
+            }
+          />
+          <TextInput
             label="Starting Nonce"
             placeholder="1"
             value={nonce}
@@ -134,14 +142,6 @@ export default function Assets() {
             placeholder="0x"
             value={data}
             onChange={(e) => setData(e.currentTarget.value)}
-          />
-          <TextInput
-            label="Number of payloads"
-            placeholder="10"
-            value={numberOfPayloads}
-            onChange={(e) =>
-              setNumberOfPayloads(parseInt(e.currentTarget.value, 10) || 1)
-            }
           />
         </SimpleGrid>
         <Button onClick={handleSign} loading={isLoading}>
