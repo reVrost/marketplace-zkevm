@@ -37,11 +37,10 @@ export const passportSDK = new passport.Passport({
     environment: config.Environment.SANDBOX,
   }),
   // non production client id
-  clientId: "Ts6WetWvIEsQdSIE5swduFkGljjtyhVE",
+  clientId: "7zPaH4jSnszlAzFaz49JKoZUvzXgLt18",
   // default next dev hosting
-  redirectUri: "https://james-working--eloquent-muffin-915c1e.netlify.app",
-  logoutRedirectUri:
-    "https://james-working--eloquent-muffin-915c1e.netlify.app",
+  redirectUri: "http://localhost:3000",
+  logoutRedirectUri: "http://localhost:3000",
   audience: "platform_api",
   scope: "openid offline_access email transact",
 });

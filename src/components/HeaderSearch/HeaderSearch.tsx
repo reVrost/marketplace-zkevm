@@ -156,6 +156,11 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
     };
   }, [connectWidget, walletWidget, bridgeWidget, setProvider]);
 
+  let shortAddress =""
+  if (userAddress) {
+   shortAddress = userAddress.substring(0, 8) + "...";
+  }
+
   // Controls the opening and closing of the widget window
   const openBridgeWidget = () => {
     bridgeWidget?.mount("connect-widget");
@@ -201,7 +206,7 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
             onClick={web3Provider ? openWalletWidget : openConnectWidget}
             variant="light"
           >
-            {web3Provider === undefined ? "Connect" : userAddress}
+            {web3Provider === undefined ? "Connect" : shortAddress}
           </Button>
           <Button
             leftIcon={<IconWallet size="1rem" />}
