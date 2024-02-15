@@ -88,6 +88,7 @@ export default function Assets() {
   const [numberOfPayloads, setNumberOfPayloads] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [accessToken, setAccessToken] = useState("");
+  const [signButtonText, setSignButtonText] = useState("Sign message");
 
   // Choose your environment
   const chosenConfig = config[Environment.Dev];
@@ -111,7 +112,7 @@ export default function Assets() {
         client.rpcProvider as unknown as any,
       ).getSigner();
 
-      const signatures = await generatePayload(
+      const payloads = await generatePayload(
         chosenConfig,
         accessToken,
         signer,
@@ -120,13 +121,20 @@ export default function Assets() {
         startingValue,
         nonce,
         numberOfPayloads,
+        setSignButtonText,
       );
 
-      setSigned(JSON.stringify(signatures));
+      const pl = {
+        accessToken,
+        payloads: payloads,
+      };
+
+      setSigned(JSON.stringify(pl));
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
+      setSignButtonText("Sign message");
     }
   };
 
@@ -139,7 +147,7 @@ export default function Assets() {
   return (
     <Container size="xl">
       <Title size="h1" sx={{ marginBottom: "1.5rem" }}>
-        Magic sign
+        Magic sign test payloads
       </Title>
       <Stack>
         <Textarea
@@ -194,7 +202,7 @@ export default function Assets() {
           />
         </SimpleGrid>
         <Button onClick={handleSign} loading={isLoading}>
-          Sign message
+          {signButtonText}
         </Button>
         <JsonInput
           autosize
@@ -218,6 +226,7 @@ const generatePayload = async (
   startingValue: number,
   startingNonce: number,
   numberOfPayloads: number,
+  setSignButtonText: (text: string) => void,
 ) => {
   const signatures = {} as Record<string, string>;
   const { chainId } = config;
@@ -253,6 +262,7 @@ const generatePayload = async (
     await guardianApprovePendingTransaction(config, idToken, transactionId);
 
     signatures[transactionId] = signature;
+    setSignButtonText("Signed " + i + " transactions...");
   }
   return signatures;
 };
