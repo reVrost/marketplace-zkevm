@@ -158,7 +158,11 @@ export function HeaderSearch({ links }: HeaderSearchProps) {
 
   let shortAddress = "";
   if (userAddress !== "" && userAddress !== undefined) {
-    shortAddress = userAddress!.substring(0, 8) + "...";
+    try {
+      shortAddress = userAddress!.substring(0, 8) + "...";
+    } catch (e) {
+      console.log(userAddress);
+    }
   }
 
   // Controls the opening and closing of the widget window

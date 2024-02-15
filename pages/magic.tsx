@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   Button,
   Container,
-  Group,
   JsonInput,
   SimpleGrid,
   Stack,
@@ -17,6 +16,25 @@ import { OpenIdExtension } from "@magic-ext/oidc";
 import { JsonRpcSigner, Web3Provider } from "@ethersproject/providers";
 import { walletContracts } from "@0xsequence/abi";
 import { BigNumber, BigNumberish, ethers } from "ethers";
+import axios from "axios";
+import { passportSDK } from "@/sdk/immutable";
+
+interface MetaTransaction {
+  delegateCall: boolean;
+  revertOnError: boolean;
+  gasLimit: BigNumber;
+  target: string;
+  value: BigNumber;
+  data: string;
+}
+
+interface ChainConfig {
+  chainId: string;
+  guardianURL: string;
+  passportURL: string;
+  magicPublishableKey: string;
+  magicProviderId: string;
+}
 
 const SIGNATURE_WEIGHT = 1; // Weight of a single signature in the multi-sig
 const TRANSACTION_SIGNATURE_THRESHOLD = 1; // Total required weight in the multi-sig for a transaction
@@ -30,13 +48,30 @@ const META_TRANSACTIONS_TYPE = `tuple(
   uint256 value,
   bytes data
 )[]`;
+
 const CHAIN_ID = "eip155:13473";
 
-const PASSPORT_ACCESS_TOKEN =
-  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNhYVl5dGR3d2UwMzJzMXIzVElyOSJ9.eyJlbWFpbCI6ImtlbmxleS5iYXN0YXJpQGltbXV0YWJsZS5jb20iLCJjbGllbnRfbmFtZSI6IlBhc3Nwb3J0IFNhbXBsZSBBcHBsaWNhdGlvbiAtIFNhbmRib3giLCJvcmciOiI5NTk2ZTgyNi0zZWYwLTRmN2QtODMwZi1kMzI2M2NmNDU1ZDAiLCJlbnZpcm9ubWVudF9pZCI6IjA4ZDQ0YjQzLTI1M2UtNDY5NC04NDIyLThjM2Y4ODAwN2E4ZiIsImNsaWVudF9vcmciOiJhZTNjYTk1NS05NWU4LTQzYjUtOGJkNS1iOGM3NjRhMzRhYmUiLCJldGhlcl9rZXkiOiIweDkwMWJmZDUxNDdmYmUxNDA2NzA3MjU5YzZjMDliY2NjM2JmOTMyYzIiLCJzdGFya19rZXkiOiIweDAzNzkxNjk5N2JlYTgxNTBhMTRhODljYThlODMxYzBmODA5OWFiNjk5MTJiZGI0Mzk4N2M1MTkwMTM2NmYwN2MiLCJ1c2VyX2FkbWluX2tleSI6IjB4YWJlNDMwYjY4M2IxOWEyNWE0YzQ2N2VkZmU1YTI0YjUzYjhjZDBjZSIsImlteF9ldGhfYWRkcmVzcyI6IjB4OTAxYmZkNTE0N2ZiZTE0MDY3MDcyNTljNmMwOWJjY2MzYmY5MzJjMiIsImlteF9zdGFya19hZGRyZXNzIjoiMHgwMzc5MTY5OTdiZWE4MTUwYTE0YTg5Y2E4ZTgzMWMwZjgwOTlhYjY5OTEyYmRiNDM5ODdjNTE5MDEzNjZmMDdjIiwiaW14X3VzZXJfYWRtaW5fYWRkcmVzcyI6IjB4YWJlNDMwYjY4M2IxOWEyNWE0YzQ2N2VkZmU1YTI0YjUzYjhjZDBjZSIsInprZXZtX2V0aF9hZGRyZXNzIjoiMHg5MDFiZmQ1MTQ3ZmJlMTQwNjcwNzI1OWM2YzA5YmNjYzNiZjkzMmMyIiwiemtldm1fdXNlcl9hZG1pbl9hZGRyZXNzIjoiMHhhYmU0MzBiNjgzYjE5YTI1YTRjNDY3ZWRmZTVhMjRiNTNiOGNkMGNlIiwiaXNzIjoiaHR0cHM6Ly9hdXRoLmltbXV0YWJsZS5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDg4MjM1MDU1MDg0NzcwODE1OTEiLCJhdWQiOlsicGxhdGZvcm1fYXBpIiwiaHR0cHM6Ly9wcm9kLmltbXV0YWJsZS5hdXRoMGFwcC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzA3ODY3ODQwLCJleHAiOjE3MDc5NTQyNDAsImF6cCI6Im1qdENMOG10MDZCdGJ4U2twMnZicllTdEtXblhWWmZvIiwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCB0cmFuc2FjdCBvZmZsaW5lX2FjY2VzcyJ9.JLH8ugPbvGNH-liyg4_PSYNf5NXs54bR9O5VX7myqFXjM-_rn_TpAPXaRVkG_q1u48W8FUXqvWHJfl25uaKgT4x2zYvSu4MTdqhr6i3DVktvlXw_p2Z4twkWPNkaAZ3PhbOf_tLwZcDWixbf4JgKsZTmhkKqw5C-niIFy_vBtKna3c6qdJLfE2NjkOg3u1pdijEuo0OURIfb1VV9TpHi5oRiZ8ka596Da-SpaVCPOCz8ovo7ZzAPlAKKVbiJ3S1t-63NNvBXVtaNUsZVr6ECwOGXN_Tzo2U_0KZMs7ShrE0lXkLiOzUFYBS3wYqCMWWTpukUq6zWCEwON9I5oIwd7A";
+enum Environment {
+  Sandbox = "sandbox",
+  Dev = "dev",
+}
 
-const MAGIC_PUBLISHABLE_KEY = "pk_live_10F423798A540ED7";
-const MAGIC_PROVIDER_ID = "fSMzaRQ4O7p4fttl7pCyGVtJS_G70P8SNsLXtPPGHo0=";
+const config = {
+  [Environment.Sandbox]: {
+    chainId: "eip155:13473",
+    guardianURL: "${guardianURL}",
+    passportURL: "https://passport.sandbox.imtbl.com",
+    magicPublishableKey: "pk_test_10F423798A540ED7",
+    magicProviderId: "fSMzaRQ4O7p4fttl7pCyGVtJS_G70P8SNsLXtPPGHo0=",
+  },
+  [Environment.Dev]: {
+    chainId: "eip155:15003",
+    guardianURL: "https://guardian.dev.imtbl.com",
+    passportURL: "https://passport.dev.imtbl.com",
+    magicPublishableKey: "pk_live_4058236363130CA9",
+    magicProviderId: "C9odf7hU4EQ5EufcfgYfcBaT5V6LhocXyiPRhIjw2EY=",
+  },
+};
 
 export default function Assets() {
   const { web3Provider, userAddress } = useContext(Web3Context);
@@ -52,20 +87,24 @@ export default function Assets() {
   const [data, setData] = useState("0x");
   const [numberOfPayloads, setNumberOfPayloads] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState(PASSPORT_ACCESS_TOKEN);
+  const [accessToken, setAccessToken] = useState("");
+
+  // Choose your environment
+  const chosenConfig = config[Environment.Sandbox];
+  const { magicProviderId, magicPublishableKey } = chosenConfig;
 
   const handleSign = async () => {
     if (!userAddress) alert("No user address");
     setIsLoading(true);
     try {
-      const client = new Magic(MAGIC_PUBLISHABLE_KEY, {
+      const client = new Magic(magicPublishableKey, {
         extensions: [new OpenIdExtension() as any],
         network: "mainnet", // We always connect to mainnet to ensure addresses are the same across envs
       });
       client.preload();
       const response = await client.openid.loginWithOIDC({
         jwt: accessToken,
-        providerId: MAGIC_PROVIDER_ID,
+        providerId: magicProviderId,
       });
       console.log(response);
       const signer = new Web3Provider(
@@ -73,6 +112,8 @@ export default function Assets() {
       ).getSigner();
 
       const signatures = await generatePayload(
+        chosenConfig,
+        accessToken,
         signer,
         userAddr,
         targetAddress,
@@ -169,6 +210,8 @@ export default function Assets() {
 }
 
 const generatePayload = async (
+  config: ChainConfig,
+  idToken: string,
   signer: JsonRpcSigner,
   userAddr: string,
   targetAddress: string,
@@ -177,6 +220,7 @@ const generatePayload = async (
   numberOfPayloads: number,
 ) => {
   const signatures = {} as Record<string, string>;
+  const { chainId } = config;
   for (let i = 0; i < numberOfPayloads; i++) {
     const txs = [
       {
@@ -189,12 +233,24 @@ const generatePayload = async (
       },
     ];
     const nonce = startingNonce + i;
-    const signature = await signAndEncodeExecute(txs, nonce, userAddr, signer);
+    const signature = await signAndEncodeExecute(
+      chainId,
+      txs,
+      nonce,
+      userAddr,
+      signer,
+    );
     // Saves to guardian
-    const { transactionId } = await guardianEvaluateTx(nonce, userAddr, txs);
+    const { transactionId } = await guardianEvaluateTx(
+      config,
+      idToken,
+      nonce,
+      userAddr,
+      txs,
+    );
 
     // Approve
-    await guardianApprovePendingTransaction(transactionId);
+    await guardianApprovePendingTransaction(config, idToken, transactionId);
 
     signatures[transactionId] = signature;
   }
@@ -212,7 +268,19 @@ export function digestOfTransactionsAndNonce(
   return ethers.utils.keccak256(packMetaTransactionsNonceData);
 }
 
+const getBigNumberFromString = (input: string): BigNumber => {
+  // Split the string by ':'
+  const parts = input.split(":");
+
+  // Extract the numeric part and convert it to a BigNumber
+  const numericPart = parts[1];
+  const bigNumber = BigNumber.from(parseInt(numericPart));
+
+  return bigNumber;
+};
+
 const signAndEncodeExecute = async (
+  chainId: string,
   txs: MetaTransaction[],
   nonce: Number,
   walletAddress: string,
@@ -221,7 +289,7 @@ const signAndEncodeExecute = async (
   // Get the hash
   const digest = digestOfTransactionsAndNonce(BigNumber.from(nonce), txs);
   const completePayload = encodeMessageSubDigest(
-    BigNumber.from(13473),
+    getBigNumberFromString(chainId),
     walletAddress,
     digest,
   );
@@ -267,25 +335,16 @@ const encodeMessageSubDigest = (
     [ETH_SIGN_PREFIX, chainId, walletAddress, digest],
   );
 
-interface MetaTransaction {
-  delegateCall: boolean;
-  revertOnError: boolean;
-  gasLimit: BigNumber;
-  target: string;
-  value: BigNumber;
-  data: string;
-}
-
-import axios from "axios";
-import { passportSDK } from "@/sdk/immutable";
-
 export async function guardianEvaluateTx(
+  config: ChainConfig,
+  idToken: string,
   nonce: Number,
   scw: String,
   metaTransactions: MetaTransaction[],
 ) {
+  const { guardianURL, chainId } = config;
   const headers = {
-    Authorization: `Bearer ${PASSPORT_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${idToken}`,
     "Content-Type": "application/json",
   };
 
@@ -299,7 +358,7 @@ export async function guardianEvaluateTx(
   }));
   const payload = {
     chainType: "evm",
-    chainId: CHAIN_ID,
+    chainId,
     transactionData: {
       nonce: nonce.toString(),
       userAddress: scw,
@@ -309,7 +368,7 @@ export async function guardianEvaluateTx(
 
   try {
     const response = await axios.post(
-      `https://guardian.sandbox.imtbl.com/guardian/v1/transactions/evm/evaluate`,
+      `${guardianURL}/guardian/v1/transactions/evm/evaluate`,
       payload,
       { headers: headers },
     );
@@ -320,21 +379,26 @@ export async function guardianEvaluateTx(
   }
 }
 
-export async function guardianApprovePendingTransaction(transactionID: string) {
+export async function guardianApprovePendingTransaction(
+  config: ChainConfig,
+  idToken: string,
+  transactionID: string,
+) {
+  const { guardianURL, chainId } = config;
   const headers = {
-    Authorization: `Bearer ${PASSPORT_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${idToken}`,
     "Content-Type": "application/json",
   };
 
   const requestBody = {
-    chainID: CHAIN_ID,
+    chainId,
     chainType: "evm",
     // otp: otp,
   };
 
   try {
     const response = await axios.post(
-      `https://guardian.sandbox.imtbl.com/guardian/v1/transactions/${transactionID}/approve`,
+      `${guardianURL}/guardian/v1/transactions/${transactionID}/approve`,
       requestBody,
       { headers: headers },
     );
