@@ -90,7 +90,7 @@ export default function Assets() {
   const [accessToken, setAccessToken] = useState("");
 
   // Choose your environment
-  const chosenConfig = config[Environment.Sandbox];
+  const chosenConfig = config[Environment.Dev];
   const { magicProviderId, magicPublishableKey } = chosenConfig;
 
   const handleSign = async () => {
