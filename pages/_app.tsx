@@ -69,6 +69,10 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
                           label: "Cart",
                           link: "/cart",
                         },
+                        {
+                          label: "Magic",
+                          link: "/magic",
+                        },
                       ]}
                     />
                   }
