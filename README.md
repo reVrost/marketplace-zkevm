@@ -1,7 +1,7 @@
 # Immutable zkEVM Example Marketplace
 
 ## Please Note
-This repository is currently archived. The repository is here and you can use it as an example. However please be aware that breaking changes from the `@imx/sdk` are not implemented and the marketplace will not run locally.
+The repository is here and you can use it as an example. However please be aware that breaking changes from the `@imx/sdk` may/may not be implemented and the marketplace will not run locally.
 
 https://docs.immutable.com/docs/zkevm/build-marketplace/
 
