@@ -18,6 +18,7 @@ export default function Assets() {
         accountAddress: userAddress!,
       });
       setNfts(response.result as any);
+      console.log("FETCHE", response.result, web3Provider, userAddress);
     };
     fetchData();
   }, [web3Provider, userAddress]);
