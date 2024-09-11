@@ -73,6 +73,10 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
                           label: "Magic",
                           link: "/magic",
                         },
+                        {
+                          label: "Add Preset",
+                          link: "/add-preset",
+                        },
                       ]}
                     />
                   }
